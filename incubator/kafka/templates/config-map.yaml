@@ -1,0 +1,27 @@
+{{ if .Values.sasl.scram.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "kafka.fullname" . }}
+  labels:
+    app: {{ include "kafka.name" . | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+
+  {{/* - range $i, $e := until (int .Values.replicas) */}}
+data:
+  kafka_server_jaas.conf: |-
+    KafkaServer {
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="admin"
+        password="admin-secret";
+    };
+    Client {
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="super"
+        password="adminsecret";
+    };
+
+  {{/* - end */}}
+{{- end }}

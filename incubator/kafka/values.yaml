@@ -106,6 +106,18 @@ configurationOverrides:
 ## The jmx port to use for brokers.  Will expose both the port and set the KAFKA_JMX_PORT env variable
 # jmxPort: 9998
 
+## Additional Java arguments to pass to Kafka.
+# kafkaOpts: -Dfoo=bar
+
+# Options for enabling SASL for kafka brokers
+sasl:
+  scram:
+    enabled: false
+    init:
+      image: "confluentinc/cp-kafka"
+      imageTag: "4.0.0"
+      imagePullPolicy: "IfNotPresent"
+
 ## A collection of additional ports to expose on brokers (formatted as normal containerPort yaml)
 # Useful when the image exposes metrics (like prometheus, etc.) through a javaagent instead of a sidecar
 additionalPorts: {}
