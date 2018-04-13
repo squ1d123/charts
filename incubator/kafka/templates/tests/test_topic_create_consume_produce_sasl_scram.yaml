@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-test-topic-create-consume-produce-sasl-scram"
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+  - name: {{ .Release.Name }}-test-consume-sasl-scram
+    image: {{ .Values.image }}:{{ .Values.imageTag }}
+    env:
+    {{- if .Values.kafkaOpts }}
+    - name: KAFKA_OPTS
+      value: "{{ .Values.kafkaOpts }}"
+    {{- end }}
+    command:
+    - sh
+    - -c
+    - |
+      set -x
+      # Create the topic
+      kafka-topics --zookeeper {{ template "zookeeper.url" . }} --topic helm-test-topic-create-consume-produce-sasl-scram --create --partitions 1 --replication-factor 1 --if-not-exists && \
+      # kafka-acls --topic helm-test-topic-create-consume-produce-sasl-scram --authorizer-properties zookeeper.connect= {{ template "zookeeper.url" . }} --add --producer --allow-principal User:admin && \
+      # Create a message
+      MESSAGE="`date -u`" && \
+      # Produce a test message to the topic
+      echo "$MESSAGE" | kafka-console-producer --broker-list {{ template "kafka.fullname" . }}:9093 --producer-property sasl.mechanism=SCRAM-SHA-256 --producer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram && \
+      # Consume a test message from the topic
+      kafka-console-consumer --bootstrap-server {{ template "kafka.fullname" . }}-headless:9093 --consumer-property sasl.mechanism=SCRAM-SHA-256 --consumer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram --consumer-property group.id=helm-test --timeout-ms 2000 --max-messages 1 | grep "$MESSAGE"
+    volumeMounts:
+    {{- if .Values.sasl.scram.enabled }}
+    - name: jaasconfig
+      #TODO params for jaas path
+      mountPath: "/etc/kafka-config"
+    {{- end }}
+  volumes:
+  {{- if .Values.sasl.scram.enabled }}
+  - name: jaasconfig
+    configMap:
+      name: {{ template "kafka.fullname" . }}
+  {{- end }}
+  restartPolicy: Never

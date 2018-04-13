@@ -12,15 +12,26 @@ metadata:
   {{/* - range $i, $e := until (int .Values.replicas) */}}
 data:
   kafka_server_jaas.conf: |-
+    // Info for Kafka to speak to other Kafkas
     KafkaServer {
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="admin"
         password="admin-secret";
     };
+
+    // Info for Kafka to connect to Zookeeper
     Client {
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="super"
         password="adminsecret";
+    };
+
+    // Info for third-party clients to connect to Kafka
+    // (This is currently only used for the tests)
+    KafkaClient {
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="admin"
+        password="admin-secret";
     };
 
   {{/* - end */}}

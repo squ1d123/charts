@@ -11,6 +11,10 @@ spec:
   ports:
   - name: broker
     port: 9092
+  {{- if .Values.sasl.scram.enabled }}
+  - name: broker-sasl
+    port: 9093
+  {{- end }}
   selector:
     app: {{ include "kafka.name" . | quote }}
     release: {{ .Release.Name | quote }}

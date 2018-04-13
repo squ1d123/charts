@@ -166,7 +166,7 @@ spec:
         {{- if .Values.sasl.scram.enabled }}
         - name: jaasconfig
           #TODO params for jaas path
-          mountPath: "/etc/kafka"
+          mountPath: "/etc/kafka-config"
         {{- end }}
       volumes:
       {{- if not .Values.persistence.enabled }}
@@ -175,7 +175,7 @@ spec:
       {{- end }}
       {{- if .Values.sasl.scram.enabled }}
       - name: jaasconfig
-        configmap:
+        configMap:
           name: {{ template "kafka.fullname" . }}
       {{- end }}
   {{- if .Values.persistence.enabled }}

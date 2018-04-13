@@ -13,6 +13,10 @@ spec:
   ports:
   - name: broker
     port: 9092
+  {{- if .Values.sasl.scram.enabled }}
+  - name: broker-sasl
+    port: 9093
+  {{- end }}
   clusterIP: None
   selector:
     app: {{ include "kafka.name" . | quote }}
