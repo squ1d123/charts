@@ -119,6 +119,7 @@ configurationOverrides:
 
 # Options for enabling SASL for kafka brokers
 sasl:
+  configPath: "/etc/kafka-config"
   scram:
     enabled: false
     init:

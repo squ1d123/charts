@@ -63,8 +63,7 @@ spec:
         - name: jaastemplate
           mountPath: "/tmp/kafka-template"
         - name: jaasconfig
-          #TODO params for jaas path
-          mountPath: "/etc/kafka-config"
+          mountPath: {{ .Values.sasl.configPath | quote }}
     {{- end }}
 {{- if .Values.tolerations }}
       tolerations:
@@ -159,8 +158,7 @@ spec:
           mountPath: {{ .Values.persistence.mountPath | quote }}
         {{- if .Values.sasl.scram.enabled }}
         - name: jaasconfig
-          #TODO params for jaas path
-          mountPath: "/etc/kafka-config"
+          mountPath: {{ .Values.sasl.configPath | quote }}
         {{- end }}
       volumes:
       {{- if not .Values.persistence.enabled }}

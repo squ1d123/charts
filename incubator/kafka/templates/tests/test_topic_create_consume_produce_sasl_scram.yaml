@@ -41,11 +41,9 @@ spec:
       kafka-console-consumer --bootstrap-server {{ template "kafka.fullname" . }}-headless:9093 --consumer-property sasl.mechanism=SCRAM-SHA-512 --consumer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram --consumer-property group.id=helm-test --timeout-ms 2000 --max-messages 1 | grep "$MESSAGE"
     volumeMounts:
     - name: jaastemplate
-      #TODO params for jaas path
       mountPath: "/tmp/kafka-template"
     - name: jaasconfig
-      #TODO params for jaas path
-      mountPath: "/etc/kafka-config"
+      mountPath: {{ .Values.sasl.configPath | quote }}
   volumes:
   - name: jaastemplate
     configMap:
