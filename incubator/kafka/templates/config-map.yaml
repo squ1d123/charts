@@ -16,7 +16,7 @@ data:
     KafkaServer {
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="admin"
-        password="admin-secret";
+        password="$SCRAM_ADMIN_PASSWORD";
     };
 
     // Info for Kafka to connect to Zookeeper
@@ -31,7 +31,7 @@ data:
     KafkaClient {
         org.apache.kafka.common.security.scram.ScramLoginModule required
         username="admin"
-        password="admin-secret";
+        password="$SCRAM_ADMIN_PASSWORD";
     };
 
   {{/* - end */}}

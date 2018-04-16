@@ -1,3 +1,4 @@
+{{- if .Values.sasl.scram.enabled }}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -13,30 +14,43 @@ spec:
     - name: KAFKA_OPTS
       value: "{{ .Values.kafkaOpts }}"
     {{- end }}
+    - name: SCRAM_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: {{ template "kafka.fullname" . }}-sasl-scram-secret
+          key: scram-admin-password
     command:
     - sh
     - -c
     - |
       set -x
+      # Render secrets
+
+      sed "s/\$SCRAM_ADMIN_PASSWORD/${SCRAM_ADMIN_PASSWORD}/g" /tmp/kafka-template/kafka_server_jaas.conf > /etc/kafka-config/kafka_server_jaas.conf && \
+      export KAFKA_TMP=$KAFKA_OPTS && \
+      unset KAFKA_OPTS && \
       # Create the topic
       kafka-topics --zookeeper {{ template "zookeeper.url" . }} --topic helm-test-topic-create-consume-produce-sasl-scram --create --partitions 1 --replication-factor 1 --if-not-exists && \
       # kafka-acls --topic helm-test-topic-create-consume-produce-sasl-scram --authorizer-properties zookeeper.connect= {{ template "zookeeper.url" . }} --add --producer --allow-principal User:admin && \
+      export KAFKA_OPTS=$KAFKA_TMP && \
       # Create a message
       MESSAGE="`date -u`" && \
       # Produce a test message to the topic
-      echo "$MESSAGE" | kafka-console-producer --broker-list {{ template "kafka.fullname" . }}:9093 --producer-property sasl.mechanism=SCRAM-SHA-256 --producer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram && \
+      echo "$MESSAGE" | kafka-console-producer --broker-list {{ template "kafka.fullname" . }}:9093 --producer-property sasl.mechanism=SCRAM-SHA-512 --producer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram && \
       # Consume a test message from the topic
-      kafka-console-consumer --bootstrap-server {{ template "kafka.fullname" . }}-headless:9093 --consumer-property sasl.mechanism=SCRAM-SHA-256 --consumer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram --consumer-property group.id=helm-test --timeout-ms 2000 --max-messages 1 | grep "$MESSAGE"
+      kafka-console-consumer --bootstrap-server {{ template "kafka.fullname" . }}-headless:9093 --consumer-property sasl.mechanism=SCRAM-SHA-512 --consumer-property security.protocol=SASL_PLAINTEXT --topic helm-test-topic-create-consume-produce-sasl-scram --consumer-property group.id=helm-test --timeout-ms 2000 --max-messages 1 | grep "$MESSAGE"
     volumeMounts:
-    {{- if .Values.sasl.scram.enabled }}
+    - name: jaastemplate
+      #TODO params for jaas path
+      mountPath: "/tmp/kafka-template"
     - name: jaasconfig
       #TODO params for jaas path
       mountPath: "/etc/kafka-config"
-    {{- end }}
   volumes:
-  {{- if .Values.sasl.scram.enabled }}
-  - name: jaasconfig
+  - name: jaastemplate
     configMap:
       name: {{ template "kafka.fullname" . }}
-  {{- end }}
+  - name: jaasconfig
+    emptyDir: { medium: "Memory" }
   restartPolicy: Never
+{{- end }}
